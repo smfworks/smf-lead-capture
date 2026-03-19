@@ -46,27 +46,47 @@ function App() {
             Select System
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <SystemButton 
-              active={activeSystem === 'unified'} 
+            <NavLink
+              to="/"
               onClick={() => setActiveSystem('unified')}
-              icon={<Layers size={16} />}
-              label="Unified View"
-              color="#9b59b6"
-            />
-            <SystemButton 
-              active={activeSystem === 'lead-capture'} 
+              style={{ textDecoration: 'none' }}
+            >
+              <SystemButton 
+                active={activeSystem === 'unified'} 
+                onClick={() => {}}
+                icon={<Layers size={16} />}
+                label="Unified View"
+                color="#9b59b6"
+              />
+            </NavLink>
+            
+            <NavLink
+              to="/lead-capture"
               onClick={() => setActiveSystem('lead-capture')}
-              icon={<Users size={16} />}
-              label="Lead Capture"
-              color="#0066CC"
-            />
-            <SystemButton 
-              active={activeSystem === 'simple-cms'} 
+              style={{ textDecoration: 'none' }}
+            >
+              <SystemButton 
+                active={activeSystem === 'lead-capture'} 
+                onClick={() => {}}
+                icon={<Users size={16} />}
+                label="Lead Capture"
+                color="#0066CC"
+              />
+            </NavLink>
+            
+            <NavLink
+              to="/simple-cms"
               onClick={() => setActiveSystem('simple-cms')}
-              icon={<Database size={16} />}
-              label="Simple CRM"
-              color="#27ae60"
-            />
+              style={{ textDecoration: 'none' }}
+            >
+              <SystemButton 
+                active={activeSystem === 'simple-cms'} 
+                onClick={() => {}}
+                icon={<Database size={16} />}
+                label="Simple CRM"
+                color="#27ae60"
+              />
+            </NavLink>
           </div>
         </div>
 
@@ -146,20 +166,17 @@ function App() {
   )
 }
 
-function SystemButton({ active, onClick, icon, label, color }) {
+function SystemButton({ active, icon, label, color }) {
   return (
-    <button
-      onClick={onClick}
+    <div
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
         padding: '10px 14px',
         borderRadius: '8px',
-        border: 'none',
         background: active ? color : 'transparent',
         color: active ? '#fff' : '#888',
-        cursor: 'pointer',
         fontSize: '14px',
         fontWeight: active ? 600 : 400,
         transition: 'all 0.2s',
@@ -169,7 +186,7 @@ function SystemButton({ active, onClick, icon, label, color }) {
     >
       {icon}
       {label}
-    </button>
+    </div>
   )
 }
 
