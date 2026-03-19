@@ -49,6 +49,14 @@ Think of it as a 24/7 digital receptionist that never sleeps, never forgets to f
 - **Lead Management** - View, filter, and export leads
 - **A/B Testing** - Test conversation variations (coming soon)
 
+### Multi-Channel Messaging
+- **WhatsApp Business** - Meta Cloud API with templates
+- **Facebook Messenger** - Messenger Platform integration
+- **Telegram** - Bot API with webhook support
+- **Unified Conversations** - Cross-channel state persistence
+- **Quick Replies** - Platform-specific button support
+- **Typing Indicators** - Real-time engagement signals
+
 ### Integrations
 - **CRM:** HubSpot, Pipedrive, Salesforce, Zoho
 - **Email:** Gmail, SendGrid, Resend, AWS SES
@@ -60,7 +68,28 @@ Think of it as a 24/7 digital receptionist that never sleeps, never forgets to f
 - **SQLite** - Default, zero-config
 - **PostgreSQL** - Production scale
 - **Full History** - Every interaction tracked
+- **Conversations** - Multi-channel message persistence
 - **Export** - CSV, JSON, or API
+
+## API Endpoints
+
+### Core API
+- `POST /api/v1/leads` - Create a new lead
+- `GET /api/v1/leads` - List leads with filters
+- `POST /api/v1/chat` - Get AI chat response
+- `GET /api/v1/metrics` - Get lead metrics
+
+### Visual Dashboard
+- `GET /api/v1/flows/{id}` - Get conversation flow
+- `POST /api/v1/flows/{id}` - Save conversation flow
+
+### Multi-Channel
+- `POST /webhooks/whatsapp` - WhatsApp webhook
+- `POST /webhooks/messenger` - Messenger webhook  
+- `POST /webhooks/telegram` - Telegram webhook
+- `GET /api/v1/conversations` - List active conversations
+- `GET /api/v1/conversations/{id}/messages` - Get conversation history
+- `POST /api/v1/conversations/{id}/messages` - Send message
 
 ## Quick Start
 
