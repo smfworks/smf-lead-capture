@@ -91,7 +91,7 @@ class LeadCapture:
                 lead_id = existing.id
                 updates = {
                     "message": data.get("message", existing.message),
-                    "metadata": {**existing.metadata, **data.get("metadata", {})},
+                    "metadata": {**existing.lead_metadata, **data.get("metadata", {})},
                     "updated_at": datetime.utcnow()
                 }
                 self.db.update_lead(lead_id, updates)

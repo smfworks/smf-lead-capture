@@ -6,16 +6,14 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
 from .config import Config
+from .database import Base  # Import shared Base
 from .integrations.channels import get_channel_integration
 from .integrations.channels.base import Conversation, Message
 
 logger = logging.getLogger(__name__)
-
-Base = declarative_base()
 
 
 class ConversationDB(Base):

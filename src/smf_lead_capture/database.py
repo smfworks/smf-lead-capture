@@ -30,7 +30,7 @@ class LeadModel(Base):
     score_category = Column(String(20), default="cold", index=True)
     status = Column(String(50), default="new", index=True)
     qualification_data = Column(JSON)
-    metadata = Column(JSON)
+    lead_metadata = Column("metadata", JSON)
     crm_id = Column(String(255))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -52,7 +52,7 @@ class LeadModel(Base):
             "score_category": self.score_category,
             "status": self.status,
             "qualification_data": self.qualification_data,
-            "metadata": self.metadata,
+            "metadata": self.lead_metadata,
             "crm_id": self.crm_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None

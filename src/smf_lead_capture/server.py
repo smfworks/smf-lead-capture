@@ -54,12 +54,18 @@ def create_app(config_path: str = "config.yaml") -> Flask:
 
 def require_api_key(f):
     """Decorator to require API key."""
+    from flask import current_app
+    
     def decorated_function(*args, **kwargs):
-        config = request.app.config["SMF_CONFIG"]
+        config = current_app.config["SMF_CONFIG"]
         api_keys = config.get("security.api_keys", [])
         
         # Get API key from header
         api_key = request.headers.get("X-API-Key") or request.args.get("api_key")
+        
+        if not api_keys:
+            # Allow if no API keys configured (dev mode)
+            return f(*args, **kwargs)
         
         if not api_key:
             return jsonify({"error": "API key required"}), 401
