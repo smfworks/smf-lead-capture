@@ -31,7 +31,7 @@ function App() {
         <div style={{ marginBottom: '30px' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Layers size={24} color="#0066CC" />
-            SMF Dashboard
+            SMF Business Central
           </h1>
           <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '5px' }}>
             {activeSystem === 'unified' && 'Unified Business Hub'}
