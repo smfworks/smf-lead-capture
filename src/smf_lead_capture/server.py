@@ -536,6 +536,97 @@ def register_routes(app: Flask):
         except Exception as e:
             logger.error(f"Error sending message: {e}")
             return jsonify({"error": str(e)}), 500
+    
+    # Smart Routing API
+    @app.route("/api/v1/routing/rules", methods=["GET"])
+    @require_api_key
+    def get_routing_rules():
+        """Get all routing rules."""
+        try:
+            rules = app.lead_capture.smart_router.get_rules()
+            return jsonify({"rules": rules})
+        except Exception as e:
+            logger.error(f"Error getting rules: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/v1/routing/rules", methods=["POST"])
+    @require_api_key
+    def create_routing_rule():
+        """Create a new routing rule."""
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "JSON body required"}), 400
+            
+            app.lead_capture.smart_router.add_custom_rule(data)
+            return jsonify({"message": "Rule created"}), 201
+        except Exception as e:
+            logger.error(f"Error creating rule: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/v1/routing/evaluate", methods=["POST"])
+    @require_api_key
+    def evaluate_routing():
+        """Evaluate routing for a lead."""
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "JSON body required"}), 400
+            
+            result = app.lead_capture.smart_router.route_lead(data)
+            return jsonify(result)
+        except Exception as e:
+            logger.error(f"Error evaluating routing: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    # ML Scoring API
+    @app.route("/api/v1/ml/score", methods=["POST"])
+    @require_api_key
+    def ml_score_lead():
+        """Score a lead using ML model."""
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "JSON body required"}), 400
+            
+            score, category, importance = app.lead_capture.smart_router.ml_scorer.score_lead(data)
+            return jsonify({
+                "score": score,
+                "category": category,
+                "feature_importance": importance
+            })
+        except Exception as e:
+            logger.error(f"Error scoring lead: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/v1/ml/train", methods=["POST"])
+    @require_api_key
+    def ml_train_model():
+        """Train ML model on historical data."""
+        try:
+            data = request.get_json()
+            if not data or "leads" not in data or "labels" not in data:
+                return jsonify({"error": "leads and labels required"}), 400
+            
+            result = app.lead_capture.smart_router.train_ml_model(
+                data["leads"],
+                data["labels"]
+            )
+            return jsonify(result)
+        except Exception as e:
+            logger.error(f"Error training model: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/v1/ml/features", methods=["GET"])
+    @require_api_key
+    def ml_feature_importance():
+        """Get ML feature importance."""
+        try:
+            importance = app.lead_capture.smart_router.get_ml_feature_importance()
+            return jsonify({"feature_importance": importance})
+        except Exception as e:
+            logger.error(f"Error getting feature importance: {e}")
+            return jsonify({"error": str(e)}), 500
 
 
 def run_server(config_path: str = "config.yaml", host: str = None, port: int = None):

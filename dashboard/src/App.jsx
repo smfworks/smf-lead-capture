@@ -1,9 +1,10 @@
 import React from 'react'
 import { Routes, Route, NavLink } from 'react-router-dom'
-import { LayoutDashboard, GitBranch, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, GitBranch, Users, Brain, Settings } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import FlowBuilder from './pages/FlowBuilder'
 import Leads from './pages/Leads'
+import MLInsights from './pages/MLInsights'
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
       }}>
         <div style={{ marginBottom: '30px' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 600 }}>SMF Lead Capture</h1>
-          <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '5px' }}>Visual Dashboard</p>
+          <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '5px' }}>AI-Powered Dashboard</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -71,6 +72,23 @@ function App() {
             <Users size={20} />
             Leads
           </NavLink>
+
+          <NavLink
+            to="/ml"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              color: isActive ? '#fff' : '#888',
+              background: isActive ? '#0066CC' : 'transparent'
+            })}
+          >
+            <Brain size={20} />
+            ML Insights
+          </NavLink>
         </div>
       </nav>
 
@@ -80,6 +98,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/flows" element={<FlowBuilder />} />
           <Route path="/leads" element={<Leads />} />
+          <Route path="/ml" element={<MLInsights />} />
         </Routes>
       </main>
     </div>

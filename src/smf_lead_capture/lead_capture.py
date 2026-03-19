@@ -13,6 +13,7 @@ from .integrations.crm import CRMIntegration
 from .integrations.email import EmailIntegration
 from .integrations.sms import SMSIntegration
 from .conversation_manager import ConversationManager
+from .smart_routing import SmartLeadRouter, TimeBasedRouting
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,12 @@ class LeadCapture:
         # Initialize conversation manager for multi-channel
         self.conversation_manager = ConversationManager(self.config)
         
+        # Initialize smart routing
+        self.smart_router = SmartLeadRouter(self.config.to_dict())
+        self.time_router = TimeBasedRouting(
+            self.config.get("advanced.timezone", "America/New_York")
+        )
+        
         logger.info("LeadCapture initialized")
     
     def process_lead(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -89,8 +96,8 @@ class LeadCapture:
                 }
                 self.db.update_lead(lead_id, updates)
             else:
-                # Score the lead
-                score, category = self._score_lead(data)
+                # Score the lead with ML
+                score, category, importance = self._score_lead(data)
                 
                 # Create lead in database
                 lead_data = {
@@ -130,42 +137,19 @@ class LeadCapture:
             logger.error(f"Error processing lead: {e}")
             raise
     
-    def _score_lead(self, data: Dict[str, Any]) -> Tuple[int, str]:
-        """Calculate lead score based on qualification data."""
-        score = 0
-        qual_config = self.config.get("qualification", {})
-        questions = qual_config.get("questions", [])
-        qualification_data = data.get("qualification_data", {})
+    def _score_lead(self, data: Dict[str, Any]) -> Tuple[int, str, Dict[str, float]]:
+        """Calculate lead score using ML model."""
+        # Use smart router's ML scoring
+        score, category, importance = self.smart_router.ml_scorer.score_lead(data)
         
-        # Score based on qualification answers
-        for question in questions:
-            field_name = question.get("field")
-            answer = qualification_data.get(field_name)
-            
-            if answer and "options" in question:
-                for option in question["options"]:
-                    if option.get("value") == answer:
-                        score += option.get("score", 0)
-                        break
+        # Also run through business rules for additional actions
+        routing_result = self.smart_router.route_lead(data)
         
-        # Apply bonuses/penalties
-        scoring_config = qual_config.get("scoring", {})
-        bonuses = scoring_config.get("bonuses", [])
-        for bonus in bonuses:
-            condition = bonus.get("condition", "")
-            if self._evaluate_condition(condition, data):
-                score += bonus.get("points", 0)
+        # Log routing decision
+        logger.info(f"Lead scored: {score} ({category}), "
+                   f"rules matched: {len(routing_result.get('matched_rules', []))}")
         
-        # Determine category
-        thresholds = scoring_config.get("thresholds", {"hot": 25, "warm": 15, "cold": 0})
-        if score >= thresholds.get("hot", 25):
-            category = "hot"
-        elif score >= thresholds.get("warm", 15):
-            category = "warm"
-        else:
-            category = "cold"
-        
-        return score, category
+        return score, category, importance
     
     def _evaluate_condition(self, condition: str, data: Dict[str, Any]) -> bool:
         """Evaluate a bonus condition string."""

@@ -271,6 +271,95 @@ advanced:
       - condition: "question_count > 5"
         action: "suggest_call"
 
+# ML Scoring Configuration
+ml_scoring:
+  enabled: true
+  model_path: "models/lead_scorer.pkl"
+  
+  # Feature weights (for rule-based fallback)
+  weights:
+    has_contact_info: 20
+    message_engagement: 15
+    intent_signals: 25
+    source_quality: 15
+    qualification_completeness: 25
+  
+  # Thresholds
+  thresholds:
+    hot: 70
+    warm: 40
+    cold: 0
+  
+  # Training settings
+  training:
+    auto_train: false
+    min_samples: 100
+    retrain_interval_days: 30
+    test_size: 0.2
+
+# Smart Routing Configuration
+smart_routing:
+  enabled: true
+  
+  # Time-based routing
+  business_hours:
+    timezone: "America/New_York"
+    start: "09:00"
+    end: "17:00"
+    days: [1, 2, 3, 4, 5]  # Monday-Friday
+  
+  # After-hours handling
+  after_hours:
+    auto_reply: true
+    message: "Thanks for reaching out! We're currently out of office but will respond first thing tomorrow."
+    capture_lead: true
+  
+  # Routing rules (can be customized via API)
+  default_rules:
+    - id: "vip_customers"
+      name: "VIP Customer Routing"
+      priority: 100
+      conditions:
+        - field: "email_domain"
+          operator: "in"
+          value: ["enterprise.com", "corp.com"]
+      actions:
+        - type: "notify_immediately"
+          channel: "sms"
+        - type: "assign_to_team"
+          team: "vip"
+    
+    - id: "hot_leads"
+      name: "Hot Lead Priority"
+      priority: 90
+      conditions:
+        - field: "score_category"
+          operator: "eq"
+          value: "hot"
+      actions:
+        - type: "notify_immediately"
+        - type: "create_task"
+          due_hours: 1
+    
+    - id: "urgent_keywords"
+      name: "Urgent Request"
+      priority: 95
+      conditions:
+        - field: "message"
+          operator: "contains"
+          value: "urgent"
+      actions:
+        - type: "escalate"
+          level: "high"
+        - type: "notify_manager"
+  
+  # Agent assignment
+  agent_assignment:
+    enabled: true
+    strategy: "predictive"  # predictive, round_robin, load_balanced
+    max_leads_per_agent: 10
+    specialization_matching: true
+
 # Multi-channel messaging configuration
 channels:
   # WhatsApp Business API
