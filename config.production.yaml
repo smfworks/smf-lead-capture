@@ -1,5 +1,6 @@
 # SMF Lead Capture - Production Configuration for SMF Works
-# This is the live configuration for smfworks.com
+# Minimal API dependencies - uses SMTP (Google Workspace) instead of SendGrid
+# Uses WhatsApp/Telegram for urgent notifications instead of Twilio
 
 server:
   host: "0.0.0.0"
@@ -11,7 +12,7 @@ server:
     - "https://www.smfworks.com"
     - "http://localhost:3000"
 
-# Database - Use SQLite for now, migrate to PostgreSQL when needed
+# Database - SQLite for simplicity, PostgreSQL available when needed
 database:
   url: "${DATABASE_URL:sqlite:///data/smf_leads.db}"
 
@@ -137,7 +138,7 @@ scoring:
 actions:
   hot_lead:
     - notify:
-        channels: ["email", "sms"]
+        channels: ["email"]
         template: "hot_lead_alert"
     - create_crm_entry:
         provider: "hubspot"
@@ -198,20 +199,26 @@ smart_routing:
     message: "Thanks for reaching out! We're currently out of office but will respond within 24 hours. For urgent requests, please call us."
     capture_lead: true
 
-# Channels (disabled for now, will enable after testing)
+# Channels (enable after testing)
 channels:
   whatsapp:
     enabled: false
+    # Add credentials when ready
+    # access_token: "${WHATSAPP_ACCESS_TOKEN}"
+    # phone_number_id: "${WHATSAPP_PHONE_NUMBER_ID}"
+  
   messenger:
     enabled: false
+  
   telegram:
     enabled: false
+    # bot_token: "${TELEGRAM_BOT_TOKEN}"
 
-# Integrations (configure with real credentials)
+# Integrations (all optional - system works without them)
 integrations:
   crm:
-    provider: "hubspot"
-    api_key: "${HUBSPOT_API_KEY}"
+    provider: "${CRM_PROVIDER:}"  # Set to "hubspot" to enable, or leave empty
+    api_key: "${HUBSPOT_API_KEY:}"
     mappings:
       email: "email"
       first_name: "firstname"
@@ -221,20 +228,26 @@ integrations:
       lead_source: "source"
       lead_score: "hs_lead_score"
   
+  # Email via SMTP (Google Workspace) - NO SendGrid needed
   notifications:
     email:
-      provider: "sendgrid"
-      api_key: "${SENDGRID_API_KEY}"
+      enabled: true
+      provider: "smtp"
+      smtp_host: "${SMTP_HOST:smtp.gmail.com}"
+      smtp_port: ${SMTP_PORT:587}
+      smtp_user: "${SMTP_USER:}"      # michael@smfworks.com
+      smtp_password: "${SMTP_PASSWORD:}"  # App password
+      use_tls: true
       from_name: "SMF Works"
-      from_email: "leads@smfworks.com"
-      to: "${OWNER_EMAIL}"
+      from_email: "${FROM_EMAIL:michael@smfworks.com}"
+      to: "${NOTIFICATION_EMAIL:michael@smfworks.com}"
     
+    # SMS removed - using WhatsApp/Telegram instead
     sms:
-      provider: "twilio"
-      account_sid: "${TWILIO_ACCOUNT_SID}"
-      auth_token: "${TWILIO_AUTH_TOKEN}"
-      from_number: "${TWILIO_PHONE_NUMBER}"
-      to: "${OWNER_PHONE}"
+      enabled: false
+      # Owner contact for WhatsApp/Telegram routing
+      to: "${OWNER_PHONE:}"
+      telegram_chat_id: "${TELEGRAM_OWNER_CHAT_ID:}"
 
 # Security
 security:
