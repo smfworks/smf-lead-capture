@@ -403,6 +403,141 @@ def register_routes(app: Flask):
         """
 
 
+    # Multi-channel webhook endpoints
+    @app.route("/webhooks/whatsapp", methods=["POST", "GET"])
+    def whatsapp_webhook():
+        """WhatsApp webhook handler."""
+        # GET for verification
+        if request.method == "GET":
+            mode = request.args.get("hub.mode")
+            token = request.args.get("hub.verify_token")
+            challenge = request.args.get("hub.challenge")
+            
+            config = app.config["SMF_CONFIG"]
+            verify_token = config.get("channels.whatsapp.verify_token", "")
+            
+            if mode == "subscribe" and token == verify_token:
+                return challenge, 200
+            return "Forbidden", 403
+        
+        # POST for messages
+        signature = request.headers.get("X-Hub-Signature-256")
+        data = request.get_json()
+        
+        result = app.lead_capture.handle_channel_message(
+            "whatsapp", data, signature
+        )
+        
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 400
+        
+        return jsonify({"status": "received"}), 200
+    
+    @app.route("/webhooks/messenger", methods=["POST", "GET"])
+    def messenger_webhook():
+        """Messenger webhook handler."""
+        # GET for verification
+        if request.method == "GET":
+            mode = request.args.get("hub.mode")
+            token = request.args.get("hub.verify_token")
+            challenge = request.args.get("hub.challenge")
+            
+            config = app.config["SMF_CONFIG"]
+            verify_token = config.get("channels.messenger.verify_token", "")
+            
+            if mode == "subscribe" and token == verify_token:
+                return challenge, 200
+            return "Forbidden", 403
+        
+        # POST for messages
+        signature = request.headers.get("X-Hub-Signature")
+        data = request.get_json()
+        
+        result = app.lead_capture.handle_channel_message(
+            "messenger", data, signature
+        )
+        
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 400
+        
+        return jsonify({"status": "received"}), 200
+    
+    @app.route("/webhooks/telegram", methods=["POST"])
+    def telegram_webhook():
+        """Telegram webhook handler."""
+        signature = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        data = request.get_json()
+        
+        result = app.lead_capture.handle_channel_message(
+            "telegram", data, signature
+        )
+        
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 400
+        
+        return jsonify({"status": "received"}), 200
+    
+    # Conversation endpoints
+    @app.route("/api/v1/conversations", methods=["GET"])
+    @require_api_key
+    def get_conversations():
+        """Get all active conversations."""
+        try:
+            conversations = app.lead_capture.get_active_conversations()
+            return jsonify({
+                "conversations": [
+                    {
+                        "id": c.id,
+                        "channel": c.channel,
+                        "external_id": c.external_id,
+                        "status": c.status,
+                        "last_activity": c.last_activity.isoformat() if c.last_activity else None,
+                        "lead_id": c.lead_id
+                    }
+                    for c in conversations
+                ]
+            })
+        except Exception as e:
+            logger.error(f"Error getting conversations: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/v1/conversations/<conversation_id>/messages", methods=["GET"])
+    @require_api_key
+    def get_conversation_messages(conversation_id: str):
+        """Get conversation messages."""
+        try:
+            messages = app.lead_capture.get_conversation_messages(conversation_id)
+            return jsonify({"messages": messages})
+        except Exception as e:
+            logger.error(f"Error getting messages: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    @app.route("/api/v1/conversations/<conversation_id>/messages", methods=["POST"])
+    @require_api_key
+    def send_conversation_message(conversation_id: str):
+        """Send message in conversation."""
+        try:
+            data = request.get_json()
+            if not data or "text" not in data:
+                return jsonify({"error": "text required"}), 400
+            
+            success = app.lead_capture.send_conversation_message(
+                conversation_id,
+                data["text"],
+                quick_replies=data.get("quick_replies"),
+                buttons=data.get("buttons")
+            )
+            
+            if success:
+                return jsonify({"message": "sent"})
+            else:
+                return jsonify({"error": "Failed to send"}), 500
+                
+        except Exception as e:
+            logger.error(f"Error sending message: {e}")
+            return jsonify({"error": str(e)}), 500
+
+
 def run_server(config_path: str = "config.yaml", host: str = None, port: int = None):
     """Run the Flask server."""
     app = create_app(config_path)

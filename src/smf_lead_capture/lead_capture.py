@@ -12,6 +12,7 @@ from .database import Database
 from .integrations.crm import CRMIntegration
 from .integrations.email import EmailIntegration
 from .integrations.sms import SMSIntegration
+from .conversation_manager import ConversationManager
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,9 @@ class LeadCapture:
         self.crm = CRMIntegration(self.config.get("integrations.crm", {}))
         self.email = EmailIntegration(self.config.get("integrations.notifications.email", {}))
         self.sms = SMSIntegration(self.config.get("integrations.notifications.sms", {}))
+        
+        # Initialize conversation manager for multi-channel
+        self.conversation_manager = ConversationManager(self.config)
         
         logger.info("LeadCapture initialized")
     
@@ -430,3 +434,39 @@ class LeadCapture:
     def export_leads(self, format: str = "json") -> str:
         """Export all leads."""
         return self.db.export_leads(format)
+    
+    # Multi-channel conversation methods
+    def handle_channel_message(self, channel: str, request_data: Any, 
+                               signature: Optional[str] = None) -> Dict[str, Any]:
+        """Handle incoming message from any channel."""
+        return self.conversation_manager.handle_incoming_message(
+            channel, request_data, signature
+        )
+    
+    def get_active_conversations(self):
+        """Get all active conversations."""
+        return self.conversation_manager.get_active_conversations()
+    
+    def get_conversation_messages(self, conversation_id: str) -> List[Dict[str, Any]]:
+        """Get conversation messages."""
+        messages = self.conversation_manager.get_conversation_context(conversation_id)
+        return [
+            {
+                "id": m.id,
+                "channel": m.channel,
+                "sender_id": m.sender_id,
+                "text": m.text,
+                "timestamp": m.timestamp.isoformat() if hasattr(m.timestamp, 'isoformat') else m.timestamp,
+                "attachments": m.attachments,
+                "metadata": m.metadata
+            }
+            for m in messages
+        ]
+    
+    def send_conversation_message(self, conversation_id: str, text: str,
+                                   quick_replies: Optional[List[Dict]] = None,
+                                   buttons: Optional[List[Dict]] = None) -> bool:
+        """Send message in conversation."""
+        return self.conversation_manager.send_message(
+            conversation_id, text, quick_replies, buttons
+        )

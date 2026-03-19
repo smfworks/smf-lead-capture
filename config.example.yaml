@@ -270,3 +270,86 @@ advanced:
         action: "notify_owner"
       - condition: "question_count > 5"
         action: "suggest_call"
+
+# Multi-channel messaging configuration
+channels:
+  # WhatsApp Business API
+  whatsapp:
+    enabled: false
+    access_token: "${WHATSAPP_ACCESS_TOKEN}"
+    phone_number_id: "${WHATSAPP_PHONE_NUMBER_ID}"
+    verify_token: "${WHATSAPP_VERIFY_TOKEN}"
+    app_secret: "${WHATSAPP_APP_SECRET}"
+    
+    # Message templates (pre-approved by Meta)
+    templates:
+      greeting:
+        name: "hello_world"
+        language: "en_US"
+      follow_up:
+        name: "follow_up"
+        language: "en_US"
+    
+    # Auto-reply settings
+    auto_reply:
+      enabled: true
+      message: "Thanks for messaging us on WhatsApp! We'll get back to you soon."
+      business_hours_only: true
+      business_hours:
+        start: "09:00"
+        end: "17:00"
+        timezone: "America/New_York"
+  
+  # Facebook Messenger
+  messenger:
+    enabled: false
+    page_access_token: "${MESSENGER_PAGE_ACCESS_TOKEN}"
+    page_id: "${MESSENGER_PAGE_ID}"
+    verify_token: "${MESSENGER_VERIFY_TOKEN}"
+    app_secret: "${MESSENGER_APP_SECRET}"
+    
+    # Get Started button
+    get_started:
+      payload: "GET_STARTED"
+      greeting:
+        - locale: "default"
+          text: "Hi {{user_first_name}}! 👋 How can we help you today?"
+    
+    # Persistent menu
+    menu:
+      enabled: true
+      items:
+        - type: "postback"
+          title: "Book a Call"
+          payload: "BOOK_CALL"
+        - type: "web_url"
+          title: "Our Website"
+          url: "https://example.com"
+  
+  # Telegram Bot
+  telegram:
+    enabled: false
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    webhook_secret: "${TELEGRAM_WEBHOOK_SECRET}"
+    
+    # Bot info
+    bot_name: "SMF Lead Bot"
+    bot_description: "Capture and qualify leads via Telegram"
+    commands:
+      - command: "start"
+        description: "Start the conversation"
+      - command: "help"
+        description: "Get help"
+      - command: "book"
+        description: "Book a call"
+    
+    # Welcome message
+    welcome_message: |
+      Welcome to SMF Lead Capture! 🎉
+      
+      I'm here to help you with:
+      • Getting information about our services
+      • Booking a consultation
+      • Answering your questions
+      
+      How can I help you today?
